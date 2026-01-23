@@ -119,7 +119,12 @@ export default {
         // Simpan user ke Vuex
         // this.$store.commit('setUser', user);
 
-        // Tampilkan sukses
+  const targetRoute =
+          user.role === 'admin'
+            ? '/dashboardadmin'
+            : '/dashboard';
+
+        // Tampilkan sukses lalu redirect
         Swal.fire({
           icon: 'success',
           title: 'Login Berhasil',
@@ -127,9 +132,8 @@ export default {
           timer: 2000,
           showConfirmButton: false,
         }).then(() => {
-          this.$router.push(redirect || '/dashboard ');
+          this.$router.push(targetRoute);
         });
-
       } catch (error) {
         console.error("Login error:", error);
 
