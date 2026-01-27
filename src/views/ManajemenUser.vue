@@ -48,15 +48,15 @@
             <td class="px-4 py-3 text-center">
               <div class="flex items-center justify-center gap-3">
                 <!-- View -->
-                <button class="text-indigo-600 hover:text-indigo-800" @click="showModalDetail">
+                <button class="text-indigo-600 hover:text-indigo-800" @click="openDetail(ticket)">
                   👁️
                 </button>
                 <!-- Edit -->
-                <button class="text-gray-600 hover:text-gray-800" @click="showModalEdit">
+                <button class="text-gray-600 hover:text-gray-800" @click="openEdit(ticket)">
                   ✏️
                 </button>
                 <!-- Delete -->
-                <button class="text-red-500 hover:text-red-700">
+                <button class="text-red-500 hover:text-red-700" @click="deleteUser(ticket.id)">
                   🗑️
                 </button>
               </div>
@@ -76,21 +76,48 @@
 
           <div class="mt-2">
             <label class="block text-black">Nama</label>
-            <input type="text" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+            <input type="text" v-model="form.name" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
           </div>
-          <div class="mt-1">
+          <div class="mt-2">
             <label class="block text-black">Email</label>
-            <input type="text" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+            <input type="text" v-model="form.email" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
           </div>
-          <div class="mt-1">
+
+          <div class="mt-2">
             <label class="block text-black">Role</label>
-            <input type="text" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+            <select v-model="form.role" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+            </select>  
           </div>
-          <div class="mt-1">
+          <!-- <div class="mt-2">
+          <select v-model="form.role" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+          </div> -->
+
+          <div class="mt-2">
             <label class="block text-black">Status</label>
-            <input type="text" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+           <select v-model="form.status" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+              <option value="Aktif">Aktif</option>
+              <option value="Non Aktif">Non Aktif</option>
+            </select>
           </div>
-    <button @click="closeModalEdit" class=" px-4 py-2 mt-3 rounded w-full hover:bg-gray-600">Tutup</button>
+          <!-- <div class="mt-2">
+            <select v-model="form.status" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+              <option value="Aktif">Aktif</option>
+              <option value="Non Aktif">Non Aktif</option>
+            </select>
+          </div> -->
+
+        <button
+          @click="updateUser"
+          class="bg-gray-400 text-white px-4 py-2 mt-3 rounded w-full hover:bg-gray-500"
+        >
+          Simpan Perubahan
+        </button>
+    <button @click="closeModalEdit" class=" px-4 py-2 mt-3 rounded w-full hover:bg-gray-600 bg-red-500">Tutup</button>
   </div>
 </div>
 
@@ -101,20 +128,25 @@
 
           <div class="mt-2">
             <label class="block text-black">Name</label>
-            <input type="text" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
-          </div>
-          <div class="mt-1">
+            <input type="text" v-model="selectedUser.name" disabled class="w-full border p-1 rounded-md bg-gray-200">
+            </div>
+          <div class="mt-2">
             <label class="block text-black">Email</label>
-            <input type="text" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+           <input type="text" v-model="selectedUser.email" disabled class="w-full border p-1 rounded-md bg-gray-200 ">
           </div>
-          <div class="mt-1">
+          <div class="mt-2">
             <label class="block text-black">Role</label>
-            <input type="text" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+            <input type="text" v-model="selectedUser.role" disabled class="w-full border p-1 rounded-md bg-gray-200 ">
           </div>
-          <div class="mt-1">
+          <div class="mt-2">
             <label class="block text-black">Status</label>
-            <input type="text" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+            <input type="text" v-model="selectedUser.status" disabled class="w-full border p-1 rounded-md bg-gray-200 ">
           </div>
+
+          <!-- <input type="text" v-model="selectedUser.name" disabled class="w-full border p-1 rounded-md bg-gray-200">
+          <input type="text" v-model="selectedUser.email" disabled class="w-full border p-1 rounded-md bg-gray-200 mt-2">
+          <input type="text" v-model="selectedUser.role" disabled class="w-full border p-1 rounded-md bg-gray-200 mt-2">
+          <input type="text" v-model="selectedUser.status" disabled class="w-full border p-1 rounded-md bg-gray-200 mt-2"> -->
 
     <button @click="closeModalDetail" class="bg-red-500 px-4 py-2 rounded w-full hover:bg-gray-600 mt-3">Tutup</button>
   </div>
@@ -126,6 +158,8 @@
 <script>
  import SidebarAdmin from '../components/SidebarAdmin.vue';
  import axios from 'axios'
+ import Swal from 'sweetalert2'
+
   
   export default {
     name: 'Layout',
@@ -138,6 +172,14 @@
       showModal: {
         edit: false,
         detail: false,
+      },
+       selectedUser: {}, // buat detail
+      form: {
+        id: null,
+        name: '',
+        email: '',
+        role: '',
+        status: '',
       },
     }
   },
@@ -159,7 +201,7 @@
         .then((response) => {
           // response.data = { success, message, data }
           if (response.data.success) {
-            this.tickets = response.data.data // ✅ INI YANG BENAR
+            this.tickets = response.data.data 
           } else {
             console.error('API error:', response.data.message)
           }
@@ -171,34 +213,122 @@
           this.isLoading = false
         })
     },
+
+     // 🔹 OPEN DETAIL
+    openDetail(user) {
+      this.selectedUser = { ...user }
+      this.showModal.detail = true
+    },
+
+    closeModalDetail() {
+      this.showModal.detail = false
+      this.selectedUser = {}
+    },
+
+    // 🔹 OPEN EDIT
+    openEdit(user) {
+      this.form = { ...user }
+      this.showModal.edit = true
+    },
+
+    closeModalEdit() {
+      this.showModal.edit = false
+      this.form = {
+        id: null,
+        name: '',
+        email: '',
+        role: '',
+        status: '',
+      }
+    },
+
+    // 🔹 UPDATE USER
+    updateUser() {
+      axios
+        .put(
+          import.meta.env.VITE_APP_BACKEND_URL_API + `/users/${this.form.id}`,
+          this.form
+        )
+        .then((res) => {
+          if (res.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil',
+              text: 'User berhasil diupdate',
+              position: 'center',
+              timer: 1500,
+              showConfirmButton: false
+            })
+
+            this.closeModalEdit()
+            this.fetchUsers()
+          }
+        })
+        .catch((err) => {
+          console.error('Gagal update user:', err)
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            նույնպես: 'User gagal diupdate'
+          })
+        })
+      },
+
+    // 🔹 DELETE USER
+   deleteUser(id) {
+      Swal.fire({
+        title: 'Yakin mau hapus?',
+        text: 'User ini akan dihapus permanen!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          axios
+            .delete(import.meta.env.VITE_APP_BACKEND_URL_API + `/users/${id}`)
+            .then((res) => {
+              if (res.data.success) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Berhasil',
+                  text: 'User berhasil dihapus',
+                  position: 'center',
+                  timer: 1500,
+                  showConfirmButton: false
+                })
+
+                this.fetchUsers()
+              }
+            })
+            .catch((err) => {
+              console.error('Gagal menghapus user:', err)
+
+              Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'User gagal dihapus'
+              })
+            })
+        }
+      })
+    },
+
+    statusClass(status) {
+      switch (status) {
+        case 'Non Aktif':
+          return 'bg-red-100 text-red-700'
+        case 'Aktif':
+          return 'bg-green-100 text-green-700'
+        default:
+          return 'bg-gray-100 text-gray-700'
+      }
+    },
+  },
+}
+</script>
     
-  statusClass(status) {
-    switch (status) {
-      case "Non Aktif":
-        return "bg-red-100 text-red-700"
-      case "Aktif":
-        return "bg-green-100 text-green-700"
-      default:
-        return "bg-gray-100 text-gray-700"
-    }
-  },
-
-  showModalEdit() {
-    this.showModal.edit = true
-  },
-
-  closeModalEdit() {
-    this.showModal.edit = false
-  },
-    showModalDetail() {
-    this.showModal.detail = true
-  },
-
-  closeModalDetail() {
-    this.showModal.detail = false
-  }
-},
-
-
-  }
-  </script>
+  
