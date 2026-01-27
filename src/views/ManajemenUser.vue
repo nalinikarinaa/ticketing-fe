@@ -125,6 +125,7 @@
 
 <script>
  import SidebarAdmin from '../components/SidebarAdmin.vue';
+ import axios from 'axios'
   
   export default {
     name: 'Layout',
@@ -133,39 +134,44 @@
     },
     data() {
     return {
-      tickets: [
-        {
-          name: "karin",
-          email: "karin@gmail.com",
-          status: "Aktif",
-          role: "user",
-        },
-        {
-          name: "annya",
-          email: "annya@gmail.com",
-          status: "Non Aktif",
-          role: "admin",
-        },
-        {
-          name: "camillo",
-          email: "camillo@gmail.com",
-          status: "Aktif",
-          role: "user",
-        },
-        {
-          name: "kendal",
-          email: "kendal@gmail.com",
-          status: "Non Aktif",
-          role: "user",
-        },
-      ],
+      tickets: [],
       showModal: {
-        Edit: false,
-        Detail: false,
+        edit: false,
+        detail: false,
       },
     }
   },
+
+   mounted() {
+    this.fetchUsers() 
+  },
+
   methods: {
+    fetchUsers() {
+      this.isLoading = true
+
+      const config = {
+        method: 'get',
+        url: import.meta.env.VITE_APP_BACKEND_URL_API + '/users',
+      }
+
+      axios(config)
+        .then((response) => {
+          // response.data = { success, message, data }
+          if (response.data.success) {
+            this.tickets = response.data.data // ✅ INI YANG BENAR
+          } else {
+            console.error('API error:', response.data.message)
+          }
+        })
+        .catch((error) => {
+          console.error('Gagal mengambil data users:', error)
+        })
+        .finally(() => {
+          this.isLoading = false
+        })
+    },
+    
   statusClass(status) {
     switch (status) {
       case "Non Aktif":
