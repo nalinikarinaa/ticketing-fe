@@ -5,11 +5,11 @@
     <div class="bg-white rounded-xl shadow p-6 mt-4">
         <h2 class="text-lg font-semibold text-gray-800 text-center">Add Tickets</h2>
       <form @submit.prevent="storeTicket" class="space-y-2">
-        <!-- judul -->
+        <!-- subject -->
          <div class="mt-6">
-            <label class="block text-sm font-medium text-blue-900 mb-1">Judul</label>
+            <label class="block text-sm font-medium text-blue-900 mb-1">Subject</label>
             <input
-              v-model="form.judul"
+              v-model="form.subject"
               type="judul"
               class="form-input w-full  rounded-lg h-10 pl-4 border border-gray-300"
               placeholder="judul"
@@ -20,7 +20,7 @@
         <div class="mt-6">
             <label class="block text-sm font-medium text-blue-900 mb-1">Kategori</label>
                 <select
-                    v-model="form.kategori"
+                    v-model="form.category"
                     id="kategori"
                     name="kategori"
                     class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungutua"
@@ -38,7 +38,7 @@
         <div class="mt-6">
             <label class="block text-sm font-medium text-blue-900 mb-1">Prioritas</label>
                 <select
-                    v-model="form.prioritas"
+                    v-model="form.priority"
                     id="prioritas"
                     name="prioritas"
                     class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungutua"
@@ -56,7 +56,7 @@
           <textarea
             placeholder="deskripsi"
             id="deskripsi"
-            v-model="form.deskripsi"
+            v-model="form.description"
             rows="4"
             class="block w-full border border-gray-300 rounded-md p-2 text-sm">
           </textarea>
@@ -110,85 +110,89 @@
 
 <script>
 import SidebarUser from "../components/SidebarUser.vue";
-import axios from 'axios'
-import Swal from 'sweetalert2'
+import axios from "axios";
+import Swal from "sweetalert2";
 
 export default {
   name: "AddTicket",
-  components: {
-    SidebarUser,
-  },
+  components: { SidebarUser },
+
   data() {
     return {
       form: {
-        judul: "",
-        kategori: "",
-        prioritas: "",
-        deskripsi: "",
-        file: null,
-        fileName: ""
+        subject: "",
+        category: "",
+        priority: "",
+        description: "",
       },
       loading: false,
     };
   },
-  methods: {
-     handleFileUpload(e) {
-    const file = e.target.files[0]
-    if (file) this.fileName = file.name
-  },
-    submitForm() {
-      console.log("Data form:", this.form);
-      // nanti di sini bisa kamu fetch ke API Laravel
-      alert("Ticket berhasil disubmit!");
-    },
-       storeTicket() {
-   if ( !this.form.judul ||
-        !this.form.kategori ||
-        !this.form.prioritas ||
-        !this.form.deskripsi) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Form belum lengkap',
-      text: 'Harap isi semua field',
-    });
-    return;
-  }
-  const config = {
-    method: 'post',
-    url: import.meta.env.VITE_APP_BACKEND_URL_API + '/addticket',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-    data: {
-      judul: this.form.judul,
-      kategori: this.form.kategori,
-      prioritas: this.form.prioritas,
-      deskripsi: this.form.deskripsi,
-    },
-  };
 
-  axios(config)
-    .then((response) => {
-      Swal.fire({
-        icon: 'success',
-        title: 'Ticket Berhasil Dibuat!',
-        text: response.data.message || 'Ticket kamu sudah terkirim.',
-      }).then(() => {
-        // redirect setelah sukses
-        this.$router.push('/myticket');
-      });
-    })
-    .catch((error) => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Gagal',
-        text:
-          error.response?.data?.message ||
-          'Terjadi kesalahan saat mengirim ticket',
-      });
-    });
-}
+  methods: {
+    storeTicket() {
+      // 🔐 AMBIL TOKEN YANG BENAR
+      const token = sessionStorage.getItem("access_token");
+
+      if (!token) {
+        Swal.fire("Unauthorized", "Silakan login ulang", "error");
+        this.$router.push("/login");
+        return;
+      }
+
+      // 🔎 VALIDASI
+      if (
+        !this.form.subject ||
+        !this.form.category ||
+        !this.form.priority ||
+        !this.form.description
+      ) {
+        Swal.fire({
+          icon: "warning",
+          title: "Form belum lengkap",
+          text: "Harap isi semua field",
+        });
+        return;
+      }
+
+      // ⚠️ MAP FIELD KE BACKEND
+      const config = {
+        method: "post",
+        url: `${import.meta.env.VITE_APP_BACKEND_URL_API}/addticket`,
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          subject: this.form.subject,
+          category: this.form.category,
+          priority: this.form.priority,
+          description: this.form.description,
+        },
+      };
+
+      axios(config)
+        .then((response) => {
+          Swal.fire({
+            icon: "success",
+            title: "Ticket Berhasil Dibuat!",
+            text: response.data.message || "Ticket berhasil dikirim",
+          }).then(() => {
+            this.$router.push("/myticket");
+          });
+        })
+        .catch((error) => {
+          console.error("ADD TICKET ERROR:", error);
+
+          Swal.fire({
+            icon: "error",
+            title: "Gagal",
+            text:
+              error.response?.data?.message ||
+              "Terjadi kesalahan saat mengirim ticket",
+          });
+        });
+    },
   },
 };
 </script>

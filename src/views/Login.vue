@@ -58,43 +58,41 @@
 </template>
 
 <script>
-import axios from 'axios';
-import Swal from 'sweetalert2';
+import axios from 'axios'
+import Swal from 'sweetalert2'
 
 export default {
   name: 'LoginForm',
+
   data() {
     return {
       email: '',
       password: '',
       loading: false,
-    };
+    }
   },
+
   methods: {
     async loginUser() {
-      // Validasi input
       if (!this.email || !this.password) {
         Swal.fire({
           icon: 'warning',
           title: 'Form belum lengkap',
-          text: 'Harap isi semua field terlebih dahulu!',
-        });
-        return;
+          text: 'Email dan password wajib diisi',
+        })
+        return
       }
 
-      this.loading = true;
+      this.loading = true
 
       Swal.fire({
         title: 'Login...',
-        text: 'Mohon tunggu sebentar',
+        text: 'Mohon tunggu',
         allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
-      });
+        didOpen: () => Swal.showLoading(),
+      })
 
       try {
-        // Kirim request login
         const response = await axios.post(
           `${import.meta.env.VITE_APP_BACKEND_URL_API}/auth/login`,
           {
@@ -104,65 +102,56 @@ export default {
           {
             headers: {
               Accept: 'application/json',
-              'Content-Type': 'application/json',
             },
           }
-        );
+        )
 
-        const { token, user, redirect, message } = response.data;
+        const { token, user, message } = response.data
 
-        // Simpan token di sessionStorage
-        sessionStorage.setItem('access_token', token);
-        sessionStorage.setItem('user', JSON.stringify(user));
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        sessionStorage.setItem('access_token', token)
+        sessionStorage.setItem('user', JSON.stringify(user))
 
-        // Simpan user ke Vuex
-        // this.$store.commit('setUser', user);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
-  const targetRoute =
-          user.role === 'admin'
-            ? '/dashboardadmin'
-            : '/dashboard';
-
-        // Tampilkan sukses lalu redirect
         Swal.fire({
           icon: 'success',
           title: 'Login Berhasil',
           text: message || 'Berhasil login',
-          timer: 2000,
+          timer: 1500,
           showConfirmButton: false,
-        }).then(() => {
-          this.$router.push(targetRoute);
-        });
-      } catch (error) {
-        console.error("Login error:", error);
+        })
+        setTimeout(() => {
+          if (user.role === 'admin') {
+            this.$router.push('/dashboardadmin')
+          } else {
+            this.$router.push('/dashboard')
+          }
+        }, 1500)
 
-        let errorMessage = 'Terjadi kesalahan!';
-        if (error.response) {
-          const errors = error.response.data.errors;
-          errorMessage = errors
-            ? Object.values(errors).flat().join('\n')
-            : error.response.data.message || errorMessage;
+      } catch (error) {
+        console.error('LOGIN ERROR:', error)
+
+        let msg = 'Login gagal'
+        if (error.response?.data?.message) {
+          msg = error.response.data.message
         }
 
         Swal.fire({
           icon: 'error',
           title: 'Login Gagal',
-          text: errorMessage,
-        });
-
+          text: msg,
+        })
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
   },
-  mounted() {
-    // Restore token (jika ada)
-    const token = sessionStorage.getItem('access_token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
-  }
-};
-</script>
 
+  mounted() {
+    const token = sessionStorage.getItem('access_token')
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    }
+  },
+}
+</script>
