@@ -2,7 +2,7 @@
 <SidebarUser>
     
 <div class="h-screen">
-    <h1 class="text-xl font-bold">HELLO USER</h1>
+    <h1 class="text-xl font-bold">HELLO {{ user }}</h1>
 
 <div class="bg-white rounded-xl shadow p-6 mt-4">
     <!-- Header -->
@@ -96,6 +96,8 @@
 </template>
 
 <script>
+import axios from "axios";
+import { ref, onMounted } from "vue";
  import SidebarUser from '../components/SidebarUser.vue';
   
   export default {
@@ -105,6 +107,9 @@
     },
     data() {
     return {
+    user: '', 
+    name: '',
+    isLoading: false,
       tickets: [
         {
           id: 112,
@@ -118,18 +123,6 @@
           status: "Closed",
           date: "15 May 2025",
         },
-        {
-          id: 245,
-          subject: "vpn ga nyambung",
-          status: "Resolved",
-          date: "18 May 2025",
-        },
-        {
-          id: 888,
-          subject: "vpn ga nyambung",
-          status: "Open",
-          date: "21 May 2025",
-        },
       ],
       showModal: {
         Edit: false,
@@ -137,7 +130,38 @@
       },
     }
   },
+
+     mounted() {
+    this.getUserName()
+  },
+
   methods: {
+
+  getUserName() {
+      // this.isLoading = true
+
+    const config = {
+      method: 'get',
+      url: import.meta.env.VITE_APP_BACKEND_URL_API + '/me',
+      headers: {
+      Authorization: `Bearer ${sessionStorage.getItem('access_token')}`,
+      Accept: 'application/json'
+    }
+    }
+
+    axios(config)
+    .then((response) => {
+        console.log(response.data) // debug
+        this.user = response.data.name
+      })
+      .catch((error) => {
+        console.error('Gagal mengambil data user:', error)
+      })
+      .finally(() => {
+        this.isLoading = false
+      })
+  },
+
   statusClass(status) {
     switch (status) {
       case "In Progress":

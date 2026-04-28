@@ -90,7 +90,7 @@
         <tbody class="divide-y">
           <tr v-for="ticket in tickets" :key="ticket.id">
             <td class="px-4 py-3 font-medium text-gray-800">
-              #{{ ticket.id }}
+              #{{ ticket.ticket_code }}
             </td>
 
             <td class="px-4 py-3 truncate max-w-[180px]">
@@ -107,12 +107,12 @@
             </td>
 
             <td class="px-4 py-3 flex items-center gap-2">
-              <img
+              <!-- <img
                 :src="ticket.avatar"
                 class="w-8 h-8 rounded-full"
                 alt="avatar"
-              />
-              <span>{{ ticket.assignedTo }}</span>
+              /> -->
+              <span>{{ ticket.user.name }}</span>
             </td>
 
             <td class="px-4 py-3">
@@ -201,9 +201,11 @@
 
 <script>
 import SidebarAdmin from '../components/SidebarAdmin.vue'
+ import axios from 'axios'
+ import Swal from 'sweetalert2'
 
 export default {
-  name: 'DashboardAdmin',
+  name: 'AllTicket',
   components: {
     SidebarAdmin
   },
@@ -211,38 +213,7 @@ export default {
   data() {
     return {
       tickets: [
-        {
-          id: 1236,
-          subject: "VPN disconnecting issue",
-          status: "In Progress",
-          assignedTo: "Floyd",
-          date: "11 May, 2025",
-          avatar: "https://i.pravatar.cc/40?img=1",
-        },
-        {
-          id: 459,
-          subject: "Login page validation error",
-          status: "Closed",
-          assignedTo: "Jerome",
-          date: "11 May, 2025",
-          avatar: "https://i.pravatar.cc/40?img=2",
-        },
-        {
-          id: 483,
-          subject: "Update HR policy document",
-          status: "Resolved",
-          assignedTo: "Jacob",
-          date: "11 May, 2025",
-          avatar: "https://i.pravatar.cc/40?img=3",
-        },
-        {
-          id: 779,
-          subject: "New employee onboarding",
-          status: "Open",
-          assignedTo: "Eleanor",
-          date: "11 May, 2025",
-          avatar: "https://i.pravatar.cc/40?img=4",
-        },
+       
       ],
       showModal: {
         Edit: false,
@@ -251,7 +222,41 @@ export default {
     }
   },
 
+    mounted() {
+    this.fetchTicket() 
+  },
+
  methods: {
+
+  fetchTicket() {
+      this.isLoading = true
+
+      const config = {
+        method: 'get',
+        url: import.meta.env.VITE_APP_BACKEND_URL_API + '/tickets',
+         headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('access_token')}`,
+          Accept: 'application/json'
+        }
+      }
+
+      axios(config)
+        .then((response) => {
+          if (response.data.success) {
+            this.tickets = response.data.data
+          } else {
+            console.error('API error:', response.data.message)
+          }
+        })
+        .catch((error) => {
+          console.error('Gagal mengambil data tickets:', error)
+        })
+        .finally(() => {
+          this.isLoading = false
+        })
+    },
+
+
   statusClass(status) {
     switch (status) {
       case "In Progress":
