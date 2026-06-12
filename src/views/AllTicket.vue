@@ -116,16 +116,16 @@
             </td>
 
             <td class="px-4 py-3">
-              {{ ticket.date }}
+                {{ new Date(ticket.created_at).toLocaleDateString('id-ID') }}
             </td>
 
             <td class="px-4 py-3 text-center">
               <div class="flex items-center justify-center gap-3">
                 <!-- View -->
-                 <RouterLink to="/detailticket">
-                <button class="text-indigo-600 hover:text-indigo-800" @click="showModalDetail">
-                  👁️
-                </button>
+                <RouterLink :to="`/detailticket/${ticket.id}`">
+                  <button class="text-indigo-600 hover:text-indigo-800">
+                    👁️
+                  </button>
                 </RouterLink>
                 <!-- Edit -->
                 <button class="text-gray-600 hover:text-gray-800" @click="showModalEdit">
@@ -272,6 +272,35 @@ export default {
     }
   },
 
+  fetchDetailTicket()
+  {
+    this.isLoading = true
+
+      const config = {
+        method: 'get',
+        url: import.meta.env.VITE_APP_BACKEND_URL_API + 'ticket/{id}',
+         headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('access_token')}`,
+          Accept: 'application/json'
+        }
+      }
+
+      axios(config)
+        .then((response) => {
+          if (response.data.success) {
+            this.tickets = response.data.data
+          } else {
+            console.error('API error:', response.data.message)
+          }
+        })
+        .catch((error) => {
+          console.error('Gagal mengambil data tickets:', error)
+        })
+        .finally(() => {
+          this.isLoading = false
+        })
+  },
+
   showModalEdit() {
     this.showModal.edit = true
   },
@@ -279,7 +308,7 @@ export default {
   closeModalEdit() {
     this.showModal.edit = false
   },
-    showModalDetail() {
+  showModalDetail() {
     this.showModal.detail = true
   },
 

@@ -15,7 +15,7 @@ const routes = [
   { path: '/createaccount', name: 'CreateAccount', component: CreateAccount },
   { path: '/dashboardadmin', name: 'DashboardAdmin', component: DashboardAdmin },
   { path: '/allticket', name: 'AllTicket', component: AllTicket },
-  { path: '/detailticket', name: 'DetailTicket', component: DetailTicket },
+  { path: '/detailticket/:id', name: 'DetailTicket', component: DetailTicket },
   { path: '/users', name: 'ManajemenUser', component: ManajemenUser },
   { path: '/dashboard', name: 'Dashboard', component: Dashboard },
   { path: '/addticket', name: 'AddTicket', component: AddTicket },
