@@ -128,7 +128,7 @@
                   </button>
                 </RouterLink>
                 <!-- Edit -->
-                <button class="text-gray-600 hover:text-gray-800" @click="showModalEdit">
+                <button class="text-gray-600 hover:text-gray-800" @click="showModalEdit(ticket)">
                   ✏️
                 </button>
                 <!-- Delete -->
@@ -153,26 +153,73 @@
 
           <div class="mt-2">
             <label class="block text-black">Ticket ID</label>
-            <input type="text" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+            <input
+              v-model="ticket.ticket_code"
+              type="text"
+              class="w-full border border-gray-300 p-1 rounded-md bg-gray-200"
+              readonly
+            >
           </div>
           <div class="mt-1">
             <label class="block text-black">Name</label>
-            <input type="text" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+            <div v-if="ticket.user">
+              <input
+                :value="ticket.user.name"
+                class="w-full border border-gray-300 p-1 rounded-md bg-gray-200"
+                readonly
+              >
+            </div>
           </div>
           <div class="mt-1">
             <label class="block text-black">Subject</label>
-            <input type="text" class="w-full border border-gray-300 p-8 rounded-md bg-gray-200">
+            <input
+              v-model="ticket.subject"
+              type="text"
+              class="w-full border border-gray-300 p-1 rounded-md bg-gray-200"
+              readonly
+            >
           </div>
           <div class="mt-1">
             <label class="block text-black">Status</label>
-            <input type="text" class="w-full border border-gray-300 p-1 rounded-md bg-gray-200">
+            <select
+              v-model="ticket.status"
+              class="w-full border rounded-lg px-3 py-2 bg-amber-50"
+            >
+              <option value="Open">Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
           </div>
-    <button @click="closeModalEdit" class="bg-red-500 px-4 py-2 mt-3 rounded w-full hover:bg-gray-600">Tutup</button>
+          <div class="mt-1">
+          <label class="block text-black">Prioritas</label>
+          <select
+            v-model="ticket.priority"
+            class="w-full border rounded-lg px-3 py-2 bg-amber-50"
+          >
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+          </div>
+          <div class="flex justify-between">
+          <button
+          @click="updateTicket"
+          class="bg-green-400 text-white px-4 py-2 rounded-lg mt-3 hover:bg-gray-600"
+        >
+          Save Changes
+        </button>
+          <button 
+          @click="closeModalEdit" 
+          class="bg-red-500 px-4 py-2 mt-3 rounded-lg hover:bg-gray-600">
+          Tutup
+        </button>
+          </div>
   </div>
 </div>
 
     <!-- Modal Detail -->
-<div v-if="showModal.detail" class="fixed inset-0 bg-transparent flex items-center justify-center z-50">
+<!-- <div v-if="showModal.detail" class="fixed inset-0 bg-transparent flex items-center justify-center z-50">
   <div class="bg-blue-100 p-4 rounded-lg max-w-md w-full">
     <h2 class="text-lg font-semibold mb-2 text-center">Detail Tiket</h2>
 
@@ -194,8 +241,8 @@
           </div>
 
     <button @click="closeModalDetail" class="bg-red-500 px-4 py-2 rounded w-full hover:bg-gray-600 mt-3">Tutup</button>
-  </div>
-</div>
+  </div> -->
+<!-- </div> -->
 
 </template>
 
@@ -215,6 +262,11 @@ export default {
       tickets: [
        
       ],
+      ticket: {
+      id: null,
+      status: '',
+      priority: ''
+    },
       showModal: {
         Edit: false,
         Detail: false,
@@ -224,6 +276,7 @@ export default {
 
     mounted() {
     this.fetchTicket() 
+    // this.fetchDetailTicket() 
   },
 
  methods: {
@@ -272,38 +325,92 @@ export default {
     }
   },
 
-  fetchDetailTicket()
-  {
-    this.isLoading = true
+   fetchDetailTicket() {
+      this.isLoading = true
+
+      const id = this.$route.params.id
 
       const config = {
         method: 'get',
-        url: import.meta.env.VITE_APP_BACKEND_URL_API + 'ticket/{id}',
-         headers: {
+        url: `${import.meta.env.VITE_APP_BACKEND_URL_API}/detailtickets/${id}`,
+        headers: {
           Authorization: `Bearer ${sessionStorage.getItem('access_token')}`,
-          Accept: 'application/json'
-        }
+          Accept: 'application/json',
+        },
       }
 
       axios(config)
         .then((response) => {
           if (response.data.success) {
-            this.tickets = response.data.data
+            this.ticket = response.data.data
           } else {
             console.error('API error:', response.data.message)
           }
         })
         .catch((error) => {
-          console.error('Gagal mengambil data tickets:', error)
+          console.error('Gagal mengambil data ticket:', error)
         })
         .finally(() => {
           this.isLoading = false
         })
-  },
+    },
 
-  showModalEdit() {
-    this.showModal.edit = true
-  },
+  updateTicket()
+{
+  this.isLoading = true
+
+  const id = this.ticket.id
+
+  const config = {
+    method: 'put',
+    url: import.meta.env.VITE_APP_BACKEND_URL_API + `/edittickets/${id}`,
+    headers: {
+      Authorization: `Bearer ${sessionStorage.getItem('access_token')}`,
+      Accept: 'application/json'
+    },
+    data: {
+      status: this.ticket.status,
+      priority: this.ticket.priority
+    }
+  }
+
+  axios(config)
+    .then((response) => {
+      if (response.data.success) {
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil',
+          text: 'Ticket berhasil diperbarui'
+        })
+
+        this.closeModalEdit()
+         this.fetchTicket()
+
+      } else {
+        console.error('API error:', response.data.message)
+      }
+    })
+    .catch((error) => {
+      console.error('Gagal update ticket:', error)
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Gagal memperbarui ticket'
+      })
+    })
+    .finally(() => {
+      this.isLoading = false
+    })
+},
+
+showModalEdit(ticket) {
+
+  this.ticket = JSON.parse(JSON.stringify(ticket))
+
+  this.showModal.edit = true
+},
 
   closeModalEdit() {
     this.showModal.edit = false
